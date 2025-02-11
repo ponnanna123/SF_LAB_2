@@ -1,1 +1,1 @@
-–
+You're right; there are several issues in your code that prevent it from properly encoding and decoding hidden data. Letâ€™s go through the problems and fix them.

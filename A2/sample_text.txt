@@ -1,1 +1,1 @@
-You're describing image-based text steganography, specifically a technique where text is embedded within the RGB values of each pixel in an image. This method is a form of LSB (Least Significant Bit) steganography, where data (in this case, text) is hidden within the least significant bits of the pixel color values without significantly altering the image's appearance.
+You're right; there are several issues in your code that prevent it from properly encoding and decoding hidden data. Let’s go through the problems and fix them.
