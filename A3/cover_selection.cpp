@@ -1,17 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <cstdlib>
-#include <cmath>
 #include <string>
 #include <filesystem>
 #include <algorithm>
-#include <limits>
 
 using namespace std;
 namespace fs = std::filesystem;
 
-void executeCommand(const string& command) {
+void execute_cmd(const string& command) {
     int result = system(command.c_str());
     if (result != 0) {
         cerr << "Error executing command: " << command << endl;
@@ -19,7 +16,7 @@ void executeCommand(const string& command) {
     }
 }
 
-vector<string> getFilesInDirectory(const string& directory, const string& extension) {
+vector<string> iter_dir(const string& directory, const string& extension) {
     vector<string> files;
     for (const auto& entry : fs::directory_iterator(directory)) {
         if (entry.path().extension() == extension) {
@@ -30,7 +27,7 @@ vector<string> getFilesInDirectory(const string& directory, const string& extens
     return files;
 }
 
-vector<int> calculateBMPHistogram(const string& filename) {
+vector<int> hist_bmp(const string& filename) {
     vector<int> histogram(256, 0);
     ifstream file(filename, ios::binary);
     
@@ -49,7 +46,7 @@ vector<int> calculateBMPHistogram(const string& filename) {
     return histogram;
 }
 
-vector<int> calculateTextHistogram(const string& filename) {
+vector<int> hist_text(const string& filename) {
     vector<int> histogram(256, 0);
     ifstream file(filename);
     
@@ -66,7 +63,7 @@ vector<int> calculateTextHistogram(const string& filename) {
     return histogram;
 }
 
-double calculateHistogramDifference(const vector<int>& hist1, const vector<int>& hist2) {
+double hist_diff(const vector<int>& hist1, const vector<int>& hist2) {
     double difference = 0.0;
     for (size_t i = 0; i < hist1.size(); ++i) {
         difference += abs(hist1[i] - hist2[i]);
@@ -75,18 +72,18 @@ double calculateHistogramDifference(const vector<int>& hist1, const vector<int>&
 }
 
 int main(int argc, char *argv[]) {
-    string imageDirectory = "images/";
-    string textDirectory = "messages/";
-    string outputDirectory = "output/";
+    string img_dir = "images/";
+    string txt_dir = "messages/";
+    string out_dir = "output/";
     
-    fs::create_directory(outputDirectory);
+    fs::create_directory(out_dir);
 
-    vector<string> imageFiles = getFilesInDirectory(imageDirectory, ".png");
-    vector<string> textFiles = getFilesInDirectory(textDirectory, ".txt");
+    vector<string> img_files = iter_dir(img_dir, ".png");
+    vector<string> txt_files = iter_dir(txt_dir, ".txt");
 
-    for (size_t i = 0; i < textFiles.size(); ++i) {
-        string textFilename = textFiles[i];
-        string outputFilename = outputDirectory + "output_" + fs::path(textFilename).stem().string() + ".txt";
+    for (size_t i = 0; i < txt_files.size(); ++i) {
+        string textFilename = txt_files[i];
+        string outputFilename = out_dir + "output_" + fs::path(textFilename).stem().string() + ".txt";
         ofstream outputFile(outputFilename);
 
         if (!outputFile) {
@@ -94,20 +91,20 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        vector<int> textHistogram = calculateTextHistogram(textFilename);
+        vector<int> textHistogram = hist_text(textFilename);
         
         double minDifference = numeric_limits<double>::max();
         string bestImage;
 
         outputFile << "Histogram differences for " << textFilename << ":\n\n";
 
-        for (const auto& imageFile : imageFiles) {
-            string bmpFilename = outputDirectory + fs::path(imageFile).stem().string() + ".bmp";
+        for (const auto& imageFile : img_files) {
+            string bmpFilename = out_dir + fs::path(imageFile).stem().string() + ".bmp";
             string convertCommand = "convert \"" + imageFile + "\" \"" + bmpFilename + "\"";
-            executeCommand(convertCommand);
+            execute_cmd(convertCommand);
 
-            vector<int> bmpHistogram = calculateBMPHistogram(bmpFilename);
-            double difference = calculateHistogramDifference(bmpHistogram, textHistogram);
+            vector<int> bmpHistogram = hist_bmp(bmpFilename);
+            double difference = hist_diff(bmpHistogram, textHistogram);
 
             outputFile << "Image: " << imageFile << ", Difference: " << difference << "\n";
 
