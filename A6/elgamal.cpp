@@ -26,40 +26,40 @@ int generateRandom(int max) {
     return rand() % (max - 1) + 1;
 }
 
-void elGamalKeyGen(int& p, int& g, int& a, int& h) {
+void elGamalKeyGen(int& p, int& g, int& x, int& y) {
     cout << "Enter a prime number (p): ";
     cin >> p;
     cout << "Enter a generator (g): ";
     cin >> g;
 
     srand(time(0));
-    a = generateRandom(p - 1);
-    h = modExp(g, a, p);
+    x = generateRandom(p - 1);
+    y = modExp(g, x, p);
 }
 
-void elGamalEncrypt(int p, int g, int h, int m, int& c1, int& c2) {
+void elGamalEncrypt(int p, int g, int y, int m, int& c1, int& c2) {
     srand(time(0));
     int k = generateRandom(p - 1);
     c1 = modExp(g, k, p);
-    c2 = (modExp(h, k, p) * m) % p;
+    c2 = (modExp(y, k, p) * m) % p;
 }
 
-int elGamalDecrypt(int p, int a, int c1, int c2) {
-    int s = modExp(c1, a, p);
+int elGamalDecrypt(int p, int x, int c1, int c2) {
+    int s = modExp(c1, x, p);
     int sInverse = modInverse(s, p);
     return (c2 * sInverse) % p;
 }
 
 int main() {
-    int p, g, a, h;
+    int p, g, x, y;
     int m;
     int c1, c2;
 
-    elGamalKeyGen(p, g, a, h);
-    cout << "Public Key: (p=" << p << ", g=" << g << ", h=" << h << ")" << endl;
-    cout << "Private Key: a=" << a << endl;
+    elGamalKeyGen(p, g, x, y);
+    cout << "Public Key: (p=" << p << ", g=" << g << ", y=" << y << ")" << endl;
+    cout << "Private Key: x=" << x << endl;
 
-    cout << "Enter the message to encrypt (m): ";
+    cout << "Enter the message to encrypt (m): (m must br smaller than p)" << endl;
     cin >> m;
 
     if (m >= p) {
@@ -67,10 +67,10 @@ int main() {
         return 1;
     }
 
-    elGamalEncrypt(p, g, h, m, c1, c2);
+    elGamalEncrypt(p, g, y, m, c1, c2);
     cout << "Encrypted values: c1=" << c1 << ", c2=" << c2 << endl;
 
-    int decryptedMessage = elGamalDecrypt(p, a, c1, c2);
+    int decryptedMessage = elGamalDecrypt(p, x, c1, c2);
     cout << "Decrypted message: " << decryptedMessage << endl;
 
     return 0;
