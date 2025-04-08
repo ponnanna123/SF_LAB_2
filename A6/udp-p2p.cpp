@@ -11,6 +11,33 @@
 
 using namespace std;
 
+const string RC4_KEY = "mysecretkey";
+
+string rc4(const string &key, const string &data) {
+    vector<unsigned char> S(256);
+    for (int i = 0; i < 256; i++) {
+        S[i] = i;
+    }
+    int j = 0;
+    for (int i = 0; i < 256; i++) {
+        j = (j + S[i] + static_cast<unsigned char>(key[i % key.size()])) % 256;
+        swap(S[i], S[j]);
+    }
+
+    string result;
+    result.resize(data.size());
+    int i = 0, k = 0;
+    j = 0;
+    for (int n = 0; n < data.size(); n++) {
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+        swap(S[i], S[j]);
+        k = S[(S[i] + S[j]) % 256];
+        result[n] = data[n] ^ k;
+    }
+    return result;
+}
+
 void receiver(const string &username) {
     int sockfd;
     struct sockaddr_in addr{};
@@ -52,15 +79,13 @@ void receiver(const string &username) {
             perror("\U0001F6AB Receive failed");
             continue;
         }
-        buffer[len] = '\0';
+        string encryptedMsg(buffer, len);
+        string msg = rc4(RC4_KEY, encryptedMsg);
 
-        string msg(buffer);
-        size_t sep = msg.find(':');
-
+        int sep = msg.find(':');
         if (sep != string::npos) {
             string recipient = msg.substr(0, sep);
             string message = msg.substr(sep + 1);
-
             if (recipient == username) {
                 cout << "\n\U0001F4E9 Message received: " << message << "\n";
                 cout << "\U0001F4AC Enter recipient: ";
@@ -98,7 +123,8 @@ void sender(const string &username) {
         getline(cin, message);
         
         string fullMessage = recipient + ":" + username + " says: " + message;
-        if (sendto(sockfd, fullMessage.c_str(), fullMessage.size(), 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        string encryptedMsg = rc4(RC4_KEY, fullMessage);
+        if (sendto(sockfd, encryptedMsg.c_str(), encryptedMsg.size(), 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             perror("\U0001F6AB Send failed");
         } else {
             cout << "\U0001F680 Message sent successfully!\n";
